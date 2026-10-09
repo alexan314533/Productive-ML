@@ -36,7 +36,7 @@ productive_keywords = []
     goal_met            INTEGER DEFAULT 0,        -- 1=yes 0=no
     productivity_score  REAL    DEFAULT 0.0       -- 0.0-100.0 computed score
 
-    STREAKS
+    STREAKS 
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     start_date      TEXT NOT NULL,   -- "YYYY-MM-DD"
     end_date        TEXT NOT NULL,   -- "YYYY-MM-DD"
@@ -87,6 +87,7 @@ while True:
 print("\nProductive keywords:")
 print(productive_keywords)
 
+'''
 def Write_data():
 
     data = {
@@ -121,6 +122,7 @@ def Save_data():
         json.dump(data, f)
 
     print("Data Sucessfully saved")
+'''
 
 print("\nTracking productivity per second... Press Ctrl+C to stop.\n")
 
@@ -142,7 +144,7 @@ try:
                 if (WarnNonProd_time == 30):
                     print("WARNING YOU HAVE BEEN UNPRODUCTIVE FOR 5 MINUTES")
                 #print(f"[+1s] NON-PRODUCTIVE → {current_window}")             
-        Write_data()
+        #Write_data()
         time.sleep(1)
 
 except KeyboardInterrupt:
@@ -150,7 +152,7 @@ except KeyboardInterrupt:
         print(f"you were not productive for {nonprod_time:.2f} seconds")
         print(f"total time elasped this session: {prod_time + nonprod_time:.2f} seconds")
         print("Stopped tracking.")
-        Save_data()
+        #Save_data()
 
 
 
