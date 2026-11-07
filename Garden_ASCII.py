@@ -187,11 +187,18 @@ def main():
             seen.add(title)
 
     saved = load_keywords()
-    if saved and input(f"\nUse saved keywords {saved[0]}? [Y/n] ").strip().lower() != "n":
+    choice = "r"
+    if saved:
+        choice = input(f"\nSaved keywords:\n  productive: {saved[0]}\n  neutral:    {saved[1]}\n"
+                       "[U]se them / [A]dd more / [R]e-enter all? [U/a/r] ").strip().lower()[:1] or "u"
+    if saved and choice not in ("a", "r"):
         productive, neutral = saved
     else:
-        productive = ask_keywords("PRODUCTIVE")
-        neutral = ask_keywords("NEUTRAL, optional, e.g. slack, email")
+        old_p, old_n = saved if (saved and choice == "a") else ([], [])
+        new_p = ask_keywords("PRODUCTIVE" + (" to add" if old_p or old_n else ""))
+        new_n = ask_keywords("NEUTRAL, optional, e.g. slack, email")
+        productive = list(dict.fromkeys([k for k in old_p if k not in new_n] + new_p))
+        neutral = list(dict.fromkeys([k for k in old_n if k not in new_p] + new_n))
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         KEYWORDS_FILE.write_text(json.dumps({"productive": productive, "neutral": neutral}))
 
