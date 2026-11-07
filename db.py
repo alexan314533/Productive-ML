@@ -215,6 +215,9 @@ DEFAULT_SETTINGS = {
     "daily_goal_secs": 10800, "weekly_goal_secs": 72000,
     "idle_threshold_secs": 300,            # no input this long = idle, stop counting
     "break_suggestions_enabled": 1,
+    "focus_minutes": 45,                   # on-task time before a break is suggested
+    "break_minutes": 5,                    # suggested break length
+    "warn_after_secs": 300,                # off-task time before a refocus reminder
 }
 
 
@@ -233,7 +236,14 @@ def connect(path="./data/tracker.db"):
 
 
 def setting(conn, key):
-    return float(conn.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()[0])
+    """A setting as a number. A missing row falls back to its default, so a database (or a db.py)
+    from an older version never crashes a newer one."""
+    row = conn.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
+    if row is None:
+        if key not in DEFAULT_SETTINGS:
+            raise KeyError(f"unknown setting: {key}")
+        return float(DEFAULT_SETTINGS[key])
+    return float(row[0])
 
 
 def _day(ts):
@@ -516,6 +526,17 @@ def can_nudge(conn, ts):
         return False
     n = conn.execute("SELECT COUNT(*) FROM nudges WHERE arm != 'none' AND sent_at > ?", (ts - 3600,)).fetchone()[0]
     return n < setting(conn, "max_nudges_per_hour")
+
+
+def log_nudge(conn, ts, arm, policy="rule", run_min=None, risk=None, switches_10m=None):
+    """Record a reminder that was shown. Also feeds the can_nudge() guardrails (cooldown, hourly cap)."""
+    dt = datetime.fromtimestamp(ts)
+    cur = conn.execute(
+        "INSERT INTO nudges (sent_at,context_key,arm,policy,hour,weekday,run_min,risk,switches_10m) "
+        "VALUES (?,?,?,?,?,?,?,?,?)",
+        (int(ts), context_key(ts), arm, policy, dt.hour, dt.weekday(), run_min, risk, switches_10m))
+    conn.commit()
+    return cur.lastrowid
 
 
 class SqlNudgeBandit:
