@@ -220,6 +220,11 @@ DEFAULT_SETTINGS = {
     "warn_after_secs": 300,                # off-task time before a refocus reminder
 }
 
+DEFAULT_KEYWORDS = {
+    1: ["visual studio code", "pycharm", "notion", "productive tracker"],    # productive
+    2: ["slack", "outlook"],                           # neutral
+}
+
 
 def connect(path="./data/tracker.db"):
     if path != ":memory:":
